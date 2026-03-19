@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createWalletClient, custom, parseEther } from "viem";
+import { base } from "viem/chains";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../lib/contract";
 
 declare global {
@@ -26,6 +27,7 @@ export default function Home() {
     }
 
     try {
+      // Switch to Base
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: "0x2105" }],
@@ -52,6 +54,7 @@ export default function Home() {
     }
 
     const client = createWalletClient({
+      chain: base, // ✅ FIXED
       transport: custom(window.ethereum),
     });
 
@@ -96,7 +99,6 @@ export default function Home() {
     if (!wallet) return alert("Connect wallet first");
     if (!address) return alert("Enter token address");
 
-    // 🔒 basic validation
     if (!address.startsWith("0x") || address.length !== 42) {
       return alert("Invalid token address");
     }
@@ -114,7 +116,8 @@ export default function Home() {
       });
 
       console.log("TX:", hash);
-      setStatus(`✅ Sent: ${hash.slice(0, 10)}...`);
+
+      setStatus(`✅ Success! TX: ${hash.slice(0, 10)}...`);
     } catch (err: any) {
       console.error("FULL ERROR:", err);
 
