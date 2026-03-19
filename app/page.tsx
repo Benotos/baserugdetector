@@ -26,7 +26,6 @@ export default function Home() {
     }
 
     try {
-      // Switch to Base
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: "0x2105" }],
@@ -53,7 +52,7 @@ export default function Home() {
     }
 
     const client = createWalletClient({
-      transport: custom(window.ethereum), // ✅ no ? here
+      transport: custom(window.ethereum),
     });
 
     const [addr] = await client.requestAddresses();
@@ -97,6 +96,11 @@ export default function Home() {
     if (!wallet) return alert("Connect wallet first");
     if (!address) return alert("Enter token address");
 
+    // 🔒 basic validation
+    if (!address.startsWith("0x") || address.length !== 42) {
+      return alert("Invalid token address");
+    }
+
     try {
       setStatus("Waiting for wallet confirmation...");
 
@@ -110,10 +114,17 @@ export default function Home() {
       });
 
       console.log("TX:", hash);
-      setStatus("Transaction sent 🚀");
-    } catch (err) {
-      console.error(err);
-      setStatus("Transaction failed ❌");
+      setStatus(`✅ Sent: ${hash.slice(0, 10)}...`);
+    } catch (err: any) {
+      console.error("FULL ERROR:", err);
+
+      if (err?.shortMessage) {
+        setStatus(`❌ ${err.shortMessage}`);
+      } else if (err?.message) {
+        setStatus(`❌ ${err.message}`);
+      } else {
+        setStatus("Transaction failed ❌");
+      }
     }
   };
 
@@ -171,7 +182,9 @@ export default function Home() {
 
       {/* STATUS */}
       {status && (
-        <p className="text-sm text-yellow-400 mt-2">{status}</p>
+        <p className="text-sm text-yellow-400 mt-2 text-center max-w-md">
+          {status}
+        </p>
       )}
     </main>
   );
