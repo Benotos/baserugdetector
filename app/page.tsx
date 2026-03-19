@@ -7,6 +7,18 @@ export default function Home() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Risk calculation (MUST be here, not inside return)
+  const calculateRisk = (result: any) => {
+    let score = 0;
+
+    if (result?.is_honeypot === "1") score += 50;
+    if (parseFloat(result?.buy_tax || "0") > 10) score += 20;
+    if (parseFloat(result?.sell_tax || "0") > 10) score += 20;
+    if (result?.can_take_back_ownership === "1") score += 30;
+
+    return score;
+  };
+
   const scanToken = async () => {
     if (!address) return alert("Enter token address");
 
@@ -52,12 +64,39 @@ export default function Home() {
 
       {result && (
         <div className="mt-6 border border-green-400 p-4 w-full max-w-md">
+
           <p>Honeypot: {result.is_honeypot === "1" ? "YES 🚨" : "No"}</p>
           <p>Buy Tax: {result.buy_tax}%</p>
           <p>Sell Tax: {result.sell_tax}%</p>
           <p>Mintable: {result.can_take_back_ownership === "1" ? "YES" : "No"}</p>
+
+          <hr className="my-3 border-green-400" />
+
+          {(() => {
+            const score = calculateRisk(result);
+
+            return (
+              <>
+                <p className="text-lg">Risk Score: {score}/100</p>
+
+                {score > 60 && (
+                  <p className="text-red-500 font-bold">🚨 HIGH RISK</p>
+                )}
+
+                {score <= 60 && score > 30 && (
+                  <p className="text-yellow-400 font-bold">⚠️ MEDIUM RISK</p>
+                )}
+
+                {score <= 30 && (
+                  <p className="text-green-400 font-bold">✅ LOW RISK</p>
+                )}
+              </>
+            );
+          })()}
+
         </div>
       )}
+
     </main>
   );
 }
