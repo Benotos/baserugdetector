@@ -1,13 +1,14 @@
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
 "use client";
 
 import { useState } from "react";
 import { createWalletClient, custom, parseEther } from "viem";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../lib/contract";
+
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
 
 export default function Home() {
   const [address, setAddress] = useState("");
@@ -17,23 +18,22 @@ export default function Home() {
   const [account, setAccount] = useState("");
   const [status, setStatus] = useState("");
 
-  // 🔌 CONNECT WALLET + SWITCH TO BASE
+  // 🔌 CONNECT WALLET
   const connectWallet = async () => {
-    if (!window?.ethereum) {
+    if (!window.ethereum) {
       alert("Install MetaMask or Coinbase Wallet");
       return;
     }
 
     try {
       // Switch to Base
-      await window?.ethereum.request({
+      await window.ethereum.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x2105" }], // 8453
+        params: [{ chainId: "0x2105" }],
       });
     } catch (switchError: any) {
-      // Add Base if not available
       if (switchError.code === 4902) {
-        await window?.ethereum.request({
+        await window.ethereum.request({
           method: "wallet_addEthereumChain",
           params: [
             {
@@ -53,7 +53,7 @@ export default function Home() {
     }
 
     const client = createWalletClient({
-      transport: custom(window?.ethereum),
+      transport: custom(window.ethereum), // ✅ no ? here
     });
 
     const [addr] = await client.requestAddresses();
@@ -95,6 +95,7 @@ export default function Home() {
   // ⛓️ REPORT RUG
   const reportRug = async () => {
     if (!wallet) return alert("Connect wallet first");
+    if (!address) return alert("Enter token address");
 
     try {
       setStatus("Waiting for wallet confirmation...");
@@ -108,11 +109,8 @@ export default function Home() {
         value: parseEther("0.0001"),
       });
 
-      setStatus("Transaction sent 🚀");
-
-      // Optional: link to explorer
       console.log("TX:", hash);
-
+      setStatus("Transaction sent 🚀");
     } catch (err) {
       console.error(err);
       setStatus("Transaction failed ❌");
@@ -161,7 +159,6 @@ export default function Home() {
 
           <hr className="border-green-400" />
 
-          {/* 🚨 REPORT */}
           <button
             onClick={reportRug}
             className="border border-red-500 text-red-500 px-4 py-2 mt-2 hover:bg-red-500 hover:text-black"
